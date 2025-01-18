@@ -18,8 +18,20 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await axios.post('YOUR_API_URL', { message: userMessage });
+      const response = await axios.post(
+        `http://127.0.0.1:8000/answer_query/`, // Replace chatId with the actual chat ID
+        { 
+          chatid: 1,
+          query: userMessage 
+        }, // The body of the POST request
+        {
+          headers: {
+            'Content-Type': 'application/json', // Ensure the content type is JSON
+          },
+        }
+      );
       const aiMessage = response.data.reply;
+      // console.log(response.data)
       newMessages.push({ text: aiMessage, sender: 'ai' });
       setMessages(newMessages);
 
