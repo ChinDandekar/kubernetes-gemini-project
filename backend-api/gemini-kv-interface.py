@@ -1,6 +1,7 @@
 import google.generativeai as genai
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from pydantic import BaseModel
 import os
 
 load_dotenv()
@@ -8,18 +9,16 @@ app = FastAPI()
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 model = genai.GenerativeModel("gemini-1.5-flash")
 
+# Define request body schema
+class QueryRequest(BaseModel):
+    chatid: int
+    query: str
 
-@app.get("/answer_query/{chatid}")
-def answer_query(chatid: int, query: str):
-    prompt = "**Query:** " + query + " \n**Answer:** "
+@app.post("/answer_query/")
+def answer_query(request: QueryRequest):
+    prompt = "**Query:** " + request.query + " \n**Answer:** "
     response = model.generate_content(prompt)
-    return {"chatid": chatid, 'ans': response.text}
-
-@app.post("/answer_query/{chatid}")
-def answer_query(chatid: int, query: str):
-    prompt = "**Query:** " + query + " \n**Answer:** "
-    response = model.generate_content(prompt)
-    return {"chatid": chatid, 'ans': response.text}
+    return {"chatid": request.chatid, 'ans': response.text}
 
 @app.get("/load_chat/{chatid}")
 def load_chat(chatid: int):
