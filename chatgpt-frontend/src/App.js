@@ -3,6 +3,8 @@ import './App.css'; // Updated with sidebar and other styles
 import ChatWindow from './components/ChatWindow';
 import InputForm from './components/InputForm';
 import ConversationSidebar from './components/ConversationSidebar';
+import { Remarkable } from 'remarkable';
+import hljs from 'highlight.js';
 import axios from 'axios';
 
 function App() {
@@ -10,9 +12,20 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [conversations, setConversations] = useState([]); // Holds the history of conversations
 
+  const md = new Remarkable({
+    highlight: function (str, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          return hljs.highlight(str, { language: lang }).value;
+        } catch (__) {}
+      }
+      return ''; // Use external default escaping
+    },
+  });
+
   // Function to handle the message submission
   const handleSendMessage = async (userMessage) => {
-    const newMessages = [...messages, { text: userMessage, sender: 'user' }];
+    const newMessages = [...messages, { text_as_html: md.render(userMessage), sender: 'user' }];
     setMessages(newMessages);
     
     setLoading(true);
@@ -30,9 +43,8 @@ function App() {
           },
         }
       );
-      const aiMessage = response.data.reply;
-      // console.log(response.data)
-      newMessages.push({ text: aiMessage, sender: 'ai' });
+      const aiMessage = md.render(response.data.reply);
+      newMessages.push({ text_as_html: aiMessage, sender: 'ai' });
       setMessages(newMessages);
 
       // Save the conversation to history
