@@ -1,9 +1,10 @@
 .chat-window {
-  height: 70vh;
-  overflow-y: auto;
+  height: 70vh; /* Defines the height */
+  overflow-y: auto; /* Allows vertical scrolling if needed */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-start; /* Start from the top for messages */
   padding: 10px;
   gap: 10px;
   margin-bottom: 15px;
@@ -11,6 +12,7 @@
   background: #2a2d37; /* Darker background for the chat container */
   transition: background-color 0.3s ease-in-out;
 }
+
 
 .message {
   display: inline-block;
@@ -40,6 +42,33 @@
   animation: fadeIn 1s ease-out;
 }
 
+/* Scrollbar styling */
+.chat-window::-webkit-scrollbar {
+  width: 8px; /* Width of the scrollbar */
+}
+
+.chat-window::-webkit-scrollbar-track {
+  background: #1e2029; /* Background color of the scrollbar track */
+  border-radius: 10px; /* Round edges of the track */
+}
+
+.chat-window::-webkit-scrollbar-thumb {
+  background: #4a4f64; /* Color of the scrollbar thumb */
+  border-radius: 10px; /* Round edges of the thumb */
+  border: 2px solid #1e2029; /* Creates a gap effect between thumb and track */
+}
+
+.chat-window::-webkit-scrollbar-thumb:hover {
+  background: #63688d; /* Hover state for the thumb */
+}
+
+/* For modern browsers with scrollbar-gutter support */
+.chat-window {
+  scrollbar-width: thin; /* Makes the scrollbar thinner (Firefox) */
+  scrollbar-color: #4a4f64 #1e2029; /* Thumb and track color (Firefox) */
+}
+
+
 @keyframes fadeIn {
   0% {
     opacity: 0;
@@ -50,3 +79,4 @@
     transform: translateY(0);
   }
 }
+
