@@ -1,25 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import '../assets/InputForm.css';
+import ExpandingTextarea from './ExpandingTextArea';
 
 const InputForm = ({ onSendMessage }) => {
-  const [input, setInput] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (input.trim()) {
-      onSendMessage(input);
-      setInput("");
+  const handleSubmit = (text) => {
+    if (text.trim()) {
+      onSendMessage(text);
     }
   };
 
   return (
     <form className="input-form" onSubmit={handleSubmit}>
-      <input
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Type a message..."
-      />
+       <ExpandingTextarea onSubmit={handleSubmit} />
       <button type="submit">Send</button>
     </form>
   );

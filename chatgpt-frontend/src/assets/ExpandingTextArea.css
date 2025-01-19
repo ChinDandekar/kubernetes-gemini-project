@@ -1,0 +1,20 @@
+.expanding-textarea {
+    width: 85%;
+    padding: 12px 15px;
+    font-size: 16px;
+    border-radius: 30px;
+    border: 1px solid #444654;
+    background: #2a2d37;
+    color: #e5e5e5;
+    transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
+    resize: none;
+    overflow: hidden;
+  }
+  
+  .expanding-textarea:focus {
+    outline: none;
+    background-color: #3c404a;
+    border-color: #00aaff;
+  }
+  
+  
