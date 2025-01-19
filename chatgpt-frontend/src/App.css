@@ -30,7 +30,7 @@ body {
  /* Chat container */
 .chat-container {
   margin-left: 35vh; /* Leave space for the sidebar */
-  width: 100vh; /* Ensure chat container takes up remaining space */
+  width: 300vh; /* Ensure chat container takes up remaining space */
   padding: 20px;
   background-color: #202123;
   display: flex;
