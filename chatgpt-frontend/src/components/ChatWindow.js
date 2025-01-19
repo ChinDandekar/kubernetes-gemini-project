@@ -5,7 +5,8 @@ import 'highlight.js/styles/github.css'; // Or any other theme
 const ChatWindow = ({ messages, loading }) => {
   return (
     <div className="chat-window">
-      {messages.map((msg, index) => (
+      {messages.filter(msg => msg.length > 0)
+      .map((msg, index) => (
         <div key={index} className={`message ${msg.sender}`}>
           <p dangerouslySetInnerHTML={{ __html:msg.text_as_html}}/>
         </div>

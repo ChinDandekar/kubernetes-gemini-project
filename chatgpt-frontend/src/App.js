@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css'; // Updated with sidebar and other styles
 import ChatWindow from './components/ChatWindow';
 import InputForm from './components/InputForm';
@@ -25,7 +25,7 @@ function App() {
 
   // Function to handle the message submission
   const handleSendMessage = async (userMessage) => {
-    const newMessages = [...messages, { text_as_html: md.render(userMessage), sender: 'user' }];
+    const newMessages = [...messages, { length: userMessage.length, text_as_html: md.render(userMessage), sender: 'user' }];
     setMessages(newMessages);
     
     setLoading(true);
@@ -44,7 +44,7 @@ function App() {
         }
       );
       const aiMessage = md.render(response.data.reply);
-      newMessages.push({ text_as_html: aiMessage, sender: 'ai' });
+      newMessages.push({ length: aiMessage.length, text_as_html: aiMessage, sender: 'ai' });
       setMessages(newMessages);
 
       // Save the conversation to history
