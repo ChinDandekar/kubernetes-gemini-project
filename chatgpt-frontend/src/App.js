@@ -12,6 +12,16 @@ function App() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  if (conversations.length === 0 || currentConversationId === null) {
+    // Create a new conversation
+    const newConversation = {
+      id: Date.now(),
+      messages: [],
+    };
+    setConversations(prevConversations => [...prevConversations, newConversation]);
+    setCurrentConversationId(newConversation.id);
+  }
+
   const md = useMemo(() => {
     return new Remarkable({
       highlight: function (str, lang) {
@@ -34,30 +44,20 @@ function App() {
 
     const newMessage = { length: userMessage.length, text_as_html: md.render(userMessage), sender: 'user' };
 
-    if (conversations.length === 0 || currentConversationId === null) {
-      // Create a new conversation
-      const newConversation = {
-        id: Date.now(),
-        messages: [newMessage],
-      };
-      setConversations(prevConversations => [...prevConversations, newConversation]);
-      setCurrentConversationId(newConversation.id);
-    } else {
-      // Add message to current conversation
-      setConversations(prevConversations => 
-        prevConversations.map(conv => 
-          conv.id === currentConversationId 
-            ? { ...conv, messages: [...conv.messages, newMessage] }
-            : conv
-        )
-      );
-    }
+    // Add message to current conversation
+    setConversations(prevConversations => 
+      prevConversations.map(conv => 
+        conv.id === currentConversationId 
+          ? { ...conv, messages: [...conv.messages, newMessage] }
+          : conv
+      )
+    );
 
     try {
       const response = await axios.post(
         `http://127.0.0.1:8000/answer_query/`,
         { 
-          chatid: currentConversationId || 1,
+          chatid: currentConversationId,
           query: userMessage 
         },
         {
@@ -89,7 +89,7 @@ function App() {
     }
 
     setLoading(false);
-  }, [conversations, currentConversationId, md]);
+  }, [currentConversationId, md]);
 
   const handleSelectConversation = useCallback((conversationId) => {
     setCurrentConversationId(conversationId);
