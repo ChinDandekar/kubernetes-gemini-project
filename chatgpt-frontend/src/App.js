@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import './App.css'; // Updated with sidebar and other styles
+import React, { useState, useCallback, useMemo } from 'react';
+import './App.css';
 import ChatWindow from './components/ChatWindow';
 import InputForm from './components/InputForm';
 import ConversationSidebar from './components/ConversationSidebar';
@@ -8,79 +8,114 @@ import hljs from 'highlight.js';
 import axios from 'axios';
 
 function App() {
-  const [messages, setMessages] = useState([]);
+  const [conversations, setConversations] = useState([]);
+  const [currentConversationId, setCurrentConversationId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [conversations, setConversations] = useState([]); // Holds the history of conversations
 
-  const md = new Remarkable({
-    highlight: function (str, lang) {
-      if (lang && hljs.getLanguage(lang)) {
-        try {
-          return hljs.highlight(str, { language: lang }).value;
-        } catch (__) {}
-      }
-      return ''; // Use external default escaping
-    },
-  });
+  const md = useMemo(() => {
+    return new Remarkable({
+      highlight: function (str, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+          try {
+            return hljs.highlight(str, { language: lang }).value;
+          } catch (__) {}
+        }
+        return ''; // Use external default escaping
+      },
+    });
+  }, []); // No dependencies, so it will only be created once
 
-  // Function to handle the message submission
-  const handleSendMessage = async (userMessage) => {
-    const newMessages = [...messages, { length: userMessage.length, text_as_html: md.render(userMessage), sender: 'user' }];
-    setMessages(newMessages);
-    
+  const getCurrentConversation = useCallback(() => {
+    return conversations.find(conv => conv.id === currentConversationId) || null;
+  }, [conversations, currentConversationId]);
+
+  const handleSendMessage = useCallback(async (userMessage) => {
     setLoading(true);
+
+    const newMessage = { length: userMessage.length, text_as_html: md.render(userMessage), sender: 'user' };
+
+    if (conversations.length === 0 || currentConversationId === null) {
+      // Create a new conversation
+      const newConversation = {
+        id: Date.now(),
+        messages: [newMessage],
+      };
+      setConversations(prevConversations => [...prevConversations, newConversation]);
+      setCurrentConversationId(newConversation.id);
+    } else {
+      // Add message to current conversation
+      setConversations(prevConversations => 
+        prevConversations.map(conv => 
+          conv.id === currentConversationId 
+            ? { ...conv, messages: [...conv.messages, newMessage] }
+            : conv
+        )
+      );
+    }
 
     try {
       const response = await axios.post(
-        `http://127.0.0.1:8000/answer_query/`, // Replace chatId with the actual chat ID
+        `http://127.0.0.1:8000/answer_query/`,
         { 
-          chatid: 1,
+          chatid: currentConversationId || 1,
           query: userMessage 
-        }, // The body of the POST request
+        },
         {
           headers: {
-            'Content-Type': 'application/json', // Ensure the content type is JSON
+            'Content-Type': 'application/json',
           },
         }
       );
-      const aiMessage = md.render(response.data.reply);
-      newMessages.push({ length: aiMessage.length, text_as_html: aiMessage, sender: 'ai' });
-      setMessages(newMessages);
-
-      // Save the conversation to history
-      setConversations([...conversations, { id: Date.now(), messages: newMessages }]);
+      
+      const aiMessage = { length: response.data.reply.length, text_as_html: md.render(response.data.reply), sender: 'ai' };
+      
+      setConversations(prevConversations => 
+        prevConversations.map(conv => 
+          conv.id === currentConversationId 
+            ? { ...conv, messages: [...conv.messages, aiMessage] }
+            : conv
+        )
+      );
     } catch (error) {
       console.error("Error fetching AI response", error);
-      setMessages([
-        ...newMessages,
-        { text: "Sorry, there was an error.", sender: 'ai' },
-      ]);
+      const errorMessage = { length: 0, text_as_html: "Sorry, there was an error.", sender: 'ai' };
+      setConversations(prevConversations => 
+        prevConversations.map(conv => 
+          conv.id === currentConversationId 
+            ? { ...conv, messages: [...conv.messages, errorMessage] }
+            : conv
+        )
+      );
     }
 
     setLoading(false);
-  };
+  }, [conversations, currentConversationId, md]);
 
-  // Function to handle conversation selection from the sidebar
-  const handleSelectConversation = (conversationId) => {
-    const selectedConversation = conversations.find(
-      (conv) => conv.id === conversationId
-    );
-    setMessages(selectedConversation.messages);
-  };
+  const handleSelectConversation = useCallback((conversationId) => {
+    setCurrentConversationId(conversationId);
+  }, []);
+
+  const handleNewConversation = useCallback(() => {
+    const newConversation = {
+      id: Date.now(),
+      messages: [],
+    };
+    setConversations(prevConversations => [...prevConversations, newConversation]);
+    setCurrentConversationId(newConversation.id);
+  }, []);
 
   return (
     <div className="App">
       <div className="layout">
-        {/* Sidebar */}
         <ConversationSidebar
           conversations={conversations}
           onSelectConversation={handleSelectConversation}
+          onNewConversation={handleNewConversation}
+          currentConversationId={currentConversationId}
         />
-        
-        {/* Chat Window */}
         <div className="chat-container">
           <h1>ChinGemini</h1>
-          <ChatWindow messages={messages} loading={loading} />
+          <ChatWindow messages={getCurrentConversation()?.messages || []} loading={loading} />
           <InputForm onSendMessage={handleSendMessage} />
         </div>
       </div>
@@ -89,3 +124,4 @@ function App() {
 }
 
 export default App;
+
