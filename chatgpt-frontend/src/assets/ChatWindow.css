@@ -1,5 +1,6 @@
 .chat-window {
   height: 70vh; /* Defines the height */
+  width: 100%;
   overflow-y: auto; /* Allows vertical scrolling if needed */
   overflow-x: hidden; /* Prevent horizontal scrolling */
   display: flex;

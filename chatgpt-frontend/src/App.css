@@ -27,7 +27,7 @@ body {
   position: relative;
 }
 
-/* Chat container */
+ /* Chat container */
 .chat-container {
   margin-left: 35vh; /* Leave space for the sidebar */
   width: 100vh; /* Ensure chat container takes up remaining space */
