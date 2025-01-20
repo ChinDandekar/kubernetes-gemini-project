@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kvstore-reader-binding        # Name of the RoleBinding
+  namespace: kvstore                  # The namespace in which the RoleBinding applies
+subjects:
+  - kind: ServiceAccount              # Type of subject (ServiceAccount in this case)
+    name: default                     # The name of the ServiceAccount to which the Role is granted
+    namespace: kvstore                # The namespace where the ServiceAccount exists
+roleRef:
+  kind: Role                          # The kind of role being referenced (Role, not ClusterRole)
+  name: kvstore-reader                # The name of the Role being referenced
+  apiGroup: rbac.authorization.k8s.io # The RBAC API group

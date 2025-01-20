@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kvstore
+  labels:
+    app: kvstore
+spec:
+  serviceName: kvstore-internal
+  replicas: 3  # Adjust for your initial quorum size
+  selector:
+    matchLabels:
+      app: kvstore
+  template:
+    metadata:
+      labels:
+        app: kvstore
+    spec:
+      containers:
+        - name: kvstore
+          image: localhost:5000/kvstore-image:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PEER_DISCOVERY
+              value: "dns"  # Configure your KV store to use DNS-based discovery
+            - name: PEER_DNS
+              value: "kvstore-internal.kvstore.svc.cluster.local"
+            - name: NAMESPACE
+              value: "kvstore"

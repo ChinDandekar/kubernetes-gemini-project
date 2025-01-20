@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kvstore-external
+  labels:
+    app: kvstore
+spec:
+  type: LoadBalancer  # Or NodePort for on-prem clusters
+  selector:
+    app: kvstore
+  ports:
+    - name: client
+      port: 9090  # Expose a port for client connections
+      targetPort: 9090

@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: kvstore      # The namespace in which this role applies
+  name: kvstore-reader    # Name of the Role
+rules:
+  - apiGroups: [""]       # The API group for core Kubernetes resources (empty string represents the core group)
+    resources: ["pods"]   # Resources this Role applies to (pods)
+    verbs: ["list"]       # Permissions granted: list pods
+  - apiGroups: ["apps"]   # The API group for apps/v1 resources (like StatefulSets)
+    resources: ["statefulsets"]
+    verbs: ["get"]        # Permissions granted: get StatefulSet details

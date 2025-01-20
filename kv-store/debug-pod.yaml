@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-kvstore
+  labels:
+    app: kvstore
+spec:
+  containers:
+    - name: kvstore
+      image: localhost:56450/kvstore-image:latest
+      env:
+        - name: PEER_DNS
+          value: "kvstore-internal.default.svc.cluster.local"
+      command: ["/bin/sh"]
+      args: ["-c", "sleep infinity"]

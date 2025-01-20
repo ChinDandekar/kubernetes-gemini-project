@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kvstore-internal
+  labels:
+    app: kvstore
+spec:
+  clusterIP: None
+  selector:
+    app: kvstore
+  ports:
+    - name: peer
+      port: 8080
+      targetPort: 8080
