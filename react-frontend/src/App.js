@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import './App.css';
 import ChatWindow from './components/ChatWindow';
 import InputForm from './components/InputForm';
@@ -14,16 +14,46 @@ function App() {
     return process.env.REACT_APP_BACKEND_URL
   }, []);
   
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        const response = await fetch(BACKEND_URL + '/load_all_chats');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("response:")
+        console.log(data)
+        const transformedConversations = Object.entries(data[0]).map(([id, messages]) => {
+          return {
+            id: Number(id),
+            messages: messages
+          };
+        });
+        setConversations(transformedConversations); // Directly sets the data if it's a single chat object. If it's an array of chat objects, use a mapping function to process the array appropriately.
 
-  if (conversations.length === 0 || currentConversationId === null) {
-    // Create a new conversation
-    const newConversation = {
-      id: Date.now(),
-      messages: [],
+        if (transformedConversations.length === 0) {
+          // Create a new conversation
+          console.log("creating a new conversation")
+          const newConversation = {
+            id: Date.now(),
+            messages: [],
+          };
+          setConversations(prevConversations => [...prevConversations, newConversation]);
+          setCurrentConversationId(newConversation.id);
+        }
+        else {
+          setCurrentConversationId(transformedConversations[0].id);
+        }
+      } catch (error) {
+        console.error('Error fetching chats:', error);
+        // Handle error appropriately, e.g., display an error message to the user.
+      }
     };
-    setConversations(prevConversations => [...prevConversations, newConversation]);
-    setCurrentConversationId(newConversation.id);
-  }
+
+    fetchChats();
+  }, [BACKEND_URL]); // Empty dependency array ensures this runs only once on mount
+
 
 
   const getCurrentConversation = useCallback(() => {

@@ -71,7 +71,10 @@ def load_chat(chatid: int):
 
 @app.get("/load_all_chats")
 def load_all_chats():
-    return local_kv_store
+    return_dict = {}
+    for chatid in local_kv_store:
+        return_dict[chatid] = local_kv_store[chatid]["messages"]
+    return [return_dict]
 
 if __name__ == "__main__":
     import uvicorn
