@@ -12,6 +12,16 @@ model = genai.GenerativeModel("gemini-1.5-flash")
 
 isprod = os.environ["MODE"] == "prod"
 local_kv_store = {}
+# the 'schema' of this store will be:
+# {
+    # chatid: 
+    # { 
+        # messages:
+        # [
+            # {length: 5, sender: "user", text: "meow"}  // msg1
+        # ]
+        # context: "**Query**: meow \n**Answer**: meow!"
+# }
 
 # Configure CORS middleware
 app.add_middleware(
@@ -30,10 +40,14 @@ class QueryRequest(BaseModel):
 
 @app.post("/answer_query/")
 def answer_query(request: QueryRequest):
+    user_query = request.query
+    context = ""
+    
     if isprod:
         print("meow")
     else:
-        context = local_kv_store.get(request.chatid, "")
+        context = local_kv_store.get(request.chatid, {"context": ""})["context"]
+
     
     prompt = context + "**Query:** " + request.query + " \n**Answer:** "
     response = model.generate_content(prompt)
@@ -41,13 +55,23 @@ def answer_query(request: QueryRequest):
     if isprod:
         print("woof")
     else:
-        local_kv_store[request.chatid] = prompt + response.text
+        if request.chatid not in local_kv_store:
+            local_kv_store[request.chatid] = {"context": "", "messages": []}
+            
+        local_kv_store[request.chatid]["context"] = prompt + response.text
+        local_kv_store[request.chatid]["messages"].append({"length": len(user_query), "sender": "user", "text": user_query})
+        local_kv_store[request.chatid]["messages"].append({"length": len(response.text), "sender": "ai", "text": response.text})
+        
         
     return {"chatid": request.chatid, 'reply': response.text}
 
 @app.get("/load_chat/{chatid}")
 def load_chat(chatid: int):
     return local_kv_store.get(chatid, "")
+
+@app.get("/load_all_chats")
+def load_all_chats():
+    return local_kv_store
 
 if __name__ == "__main__":
     import uvicorn
