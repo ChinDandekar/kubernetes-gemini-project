@@ -12,6 +12,11 @@ function App() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const BACKEND_URL = useMemo(() => {
+    return process.env.REACT_APP_BACKEND_URL
+  }, []);
+  
+
   if (conversations.length === 0 || currentConversationId === null) {
     // Create a new conversation
     const newConversation = {
@@ -55,15 +60,15 @@ function App() {
 
     try {
       const response = await axios.post(
-        `http://127.0.0.1:8000/answer_query/`,
+        BACKEND_URL + `/answer_query/`,
         { 
           chatid: currentConversationId,
           query: userMessage 
         },
         {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+            headers: {
+              'Content-Type': 'application/json',
+            },
         }
       );
       
@@ -89,7 +94,7 @@ function App() {
     }
 
     setLoading(false);
-  }, [currentConversationId, md]);
+  }, [currentConversationId, md, BACKEND_URL  ]);
 
   const handleSelectConversation = useCallback((conversationId) => {
     setCurrentConversationId(conversationId);
