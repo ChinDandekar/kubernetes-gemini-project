@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import React from 'react';
 import '../assets/ChatWindow.css';
+import { MarkdownRenderer } from "./MarkdownRenderer"
 import 'highlight.js/styles/github.css'; // Or any other theme
 
 const ChatWindow = ({ messages, loading }) => {
@@ -17,7 +18,7 @@ const ChatWindow = ({ messages, loading }) => {
     <div ref={chatWindowRef} className="chat-window">
       {messages.filter((msg) => msg.length > 0).map((msg, index) => (
         <div key={index} className={`message ${msg.sender}`}>
-          <p dangerouslySetInnerHTML={{ __html: msg.text_as_html }} />
+          <MarkdownRenderer>{msg.text}</MarkdownRenderer>
         </div>
       ))}
       {loading && <div className="loading">AI is typing...</div>}
