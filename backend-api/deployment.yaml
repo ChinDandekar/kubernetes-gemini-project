@@ -25,3 +25,6 @@ spec:
             requests:
               memory: "128Mi"
               cpu: "250m"
+          env:
+            - name: MODE
+              value: "prod"  # Configure your KV store to use DNS-based discovery
