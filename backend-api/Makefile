@@ -29,6 +29,11 @@ delete:
 apply:
 	kubectl apply -f deployment.yaml
 
+setup:
+	kubectl apply -f service.yaml
+	kubectl port-forward svc/fastapi-backend-service 8000:8000 &
+	make apply
+
 all:
 	make build
 	make tag

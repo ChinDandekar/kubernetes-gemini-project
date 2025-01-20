@@ -30,6 +30,9 @@ apply:
 	kubectl apply -f deployment.yaml
 	minikube tunnel
 
+setup:
+	make apply
+
 all:
 	make build
 	make tag

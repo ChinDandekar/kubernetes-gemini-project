@@ -3,7 +3,12 @@ shutdown:
 	$(MAKE) -C kv-store delete
 	$(MAKE) -C backend-api delete
 
-startup:
+apply:
 	$(MAKE) -C kv-store apply
 	$(MAKE) -C backend-api apply
 	$(MAKE) -C react-frontend apply
+
+startup:
+	$(MAKE) -C kv-store setup
+	$(MAKE) -C backend-api setup
+	$(MAKE) -C react-frontend setup

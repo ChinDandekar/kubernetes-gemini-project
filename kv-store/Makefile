@@ -32,8 +32,6 @@ apply:
 
 
 setup:
-	make push
-	kubectl config set-context --current --namespace=kvstore
 	kubectl apply -f role.yaml
 	kubectl apply -f rolebinding.yaml
 	kubectl apply -f kvstore-internal.yaml
