@@ -10,6 +10,8 @@ app = FastAPI()
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 model = genai.GenerativeModel("gemini-1.5-flash")
 
+isprod = os.environ["MODE"] == "prod"
+local_kv_store = {}
 
 # Configure CORS middleware
 app.add_middleware(
@@ -28,15 +30,27 @@ class QueryRequest(BaseModel):
 
 @app.post("/answer_query/")
 def answer_query(request: QueryRequest):
-    prompt = "**Query:** " + request.query + " \n**Answer:** "
+    if isprod:
+        print("meow")
+    else:
+        context = local_kv_store.get(request.chatid, "")
+    
+    prompt = context + "**Query:** " + request.query + " \n**Answer:** "
     response = model.generate_content(prompt)
+    
+    if isprod:
+        print("woof")
+    else:
+        local_kv_store[request.chatid] = prompt + response.text
+        
     return {"chatid": request.chatid, 'reply': response.text}
 
 @app.get("/load_chat/{chatid}")
 def load_chat(chatid: int):
-    return {"conversation": "Fake conversation"}
+    return local_kv_store.get(chatid, "")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = 8000 if isprod else 8001
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
