@@ -10,11 +10,20 @@ push:
 delete:
 	kubectl delete -n kvstore statefulset kvstore
 
-create-registry:
-	docker run -d -p 64005:5000 --name localregistry registry:2
+apply:
+	kubectl apply -f kvstore-stateful.yaml
+
+
+setup:
+	make push
+	kubectl config set-context --current --namespace=kvstore
+	kubectl apply -f role.yaml
+	kubectl apply -f rolebinding.yaml
+	kubectl apply -f kvstore-internal.yaml
+	kubectl apply -f kvstore-external.yaml
+	make apply
 
 all:
 	make build
 	make tag
 	make push
-	kubectl apply -f kvstore-stateful.yaml
