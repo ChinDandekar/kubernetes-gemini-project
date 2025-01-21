@@ -9,4 +9,4 @@ rules:
     verbs: ["list"]       # Permissions granted: list pods
   - apiGroups: ["apps"]   # The API group for apps/v1 resources (like StatefulSets)
     resources: ["statefulsets"]
-    verbs: ["get"]        # Permissions granted: get StatefulSet details
+    verbs: ["get", "post", "delete", "put"]        # Permissions granted: get StatefulSet details

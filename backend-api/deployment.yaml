@@ -31,4 +31,4 @@ spec:
             - name: MODE
               value: "prod"
             - name: KVSTORE_SERVICE
-              value: kvstore-external #Add this environment variable
+              value: kvstore-external.kvstore.svc.cluster.local

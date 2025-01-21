@@ -42,3 +42,4 @@ all:
 	make build
 	make tag
 	make push
+	make apply

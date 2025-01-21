@@ -6,7 +6,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["services"]
-    verbs: ["get", "list"]
+    verbs: ["get", "list", "post", "delete", "put"]
     # Add this if your backend needs to discover the pods behind the service
     # - apiGroups: [""]
     #   resources: ["endpoints"]

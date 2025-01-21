@@ -2,6 +2,8 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import requests
+import logging
 from pydantic import BaseModel
 import os
 
@@ -10,7 +12,14 @@ app = FastAPI()
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 model = genai.GenerativeModel("gemini-1.5-flash")
 
+logger = logging.getLogger(__name__) # Get a logger instance
+logger.setLevel(logging.INFO) # Set the logger level to INFO
+logging.basicConfig(level=logging.INFO, 
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 isprod = os.environ["MODE"] == "prod"
+
+kvstore_service = os.environ.get("KVSTORE_SERVICE", "")
+base_url = f"http://{kvstore_service}:9090"
 local_kv_store = {}
 # the 'schema' of this store will be:
 # {
@@ -38,22 +47,56 @@ class QueryRequest(BaseModel):
     chatid: int
     query: str
 
-@app.post("/answer_query/")
+@app.post("/answer_query")
 def answer_query(request: QueryRequest):
     user_query = request.query
     context = ""
     
+    
     if isprod:
-        print("meow")
+        get_context_url = base_url + f"/get/{request.chatid}"
+        try:
+            kv_get_response = requests.get(get_context_url)
+            kv_get_response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+            logger.info("KVStore get successful: %s", kv_get_response.json())
+            get_response_json = kv_get_response.json()
+            if get_response_json and "context" in get_response_json:
+                context = get_response_json["context"]
+                messages = get_response_json["messages"]
+            else:
+                context = ""
+                messages = []
+
+        except requests.exceptions.RequestException as e:
+            logger.error("Error connecting to KVStore: %s", e, exc_info=True) # Log exceptions with traceback
+            context = ""
+            messages = []
     else:
         context = local_kv_store.get(request.chatid, {"context": ""})["context"]
-
+        logger.info("using local_kv_store")
     
     prompt = context + "**Query:** " + request.query + " \n**Answer:** "
+    logger.info("this is prompt: " + prompt)
     response = model.generate_content(prompt)
+    logger.info("this is response: " + response.text)
     
     if isprod:
-        print("woof")
+        messages.append({"length": len(user_query), "sender": "user", "text": user_query})
+        messages.append({"length": len(response.text), "sender": "ai", "text": response.text})
+        input_dict = {
+            "context": prompt + response.text,
+            "messages": messages
+        }
+        
+        get_context_url = base_url + f"/set/{request.chatid}"
+        try:
+            kv_set_response = requests.post(get_context_url, json=input_dict)
+            kv_set_response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+            logger.info(f"KVStore post successful: {kv_set_response.json()}")
+            response_json = kv_set_response.json()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error connecting to KVStore: {e}")
+        
     else:
         if request.chatid not in local_kv_store:
             local_kv_store[request.chatid] = {"context": "", "messages": []}
@@ -62,8 +105,12 @@ def answer_query(request: QueryRequest):
         local_kv_store[request.chatid]["messages"].append({"length": len(user_query), "sender": "user", "text": user_query})
         local_kv_store[request.chatid]["messages"].append({"length": len(response.text), "sender": "ai", "text": response.text})
         
-        
+    logger.info("Request processed successfully for chatid: %s", request.chatid) # Add info message at end
     return {"chatid": request.chatid, 'reply': response.text}
+
+@app.post("/test_post")
+def test_post():
+    return {"it": "works!"}
 
 @app.get("/load_chat/{chatid}")
 def load_chat(chatid: int):
@@ -71,6 +118,7 @@ def load_chat(chatid: int):
 
 @app.get("/load_all_chats")
 def load_all_chats():
+    logger.info("MEOOOOOOW")
     return_dict = {}
     for chatid in local_kv_store:
         return_dict[chatid] = local_kv_store[chatid]["messages"]

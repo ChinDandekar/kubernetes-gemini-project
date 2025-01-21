@@ -24,17 +24,19 @@ push:
 	docker push localhost:5000/backend-image:latest
 
 delete:
+	pkill -f "kubectl port-forward svc/fastapi-backend-service 8000:8000"
 	kubectl delete -n backend-api deployment fastapi-backend
 
 apply:
 	kubectl apply -f deployment.yaml
+	sleep 1.5
+	kubectl port-forward svc/fastapi-backend-service 8000:8000 &
 
 setup:
 	kubectl apply -f backend-sa.yaml
 	kubectl apply -f backend-clusterrolebinding.yaml
 	kubectl apply -f backend-clusterrole.yaml
 	kubectl apply -f service.yaml
-	kubectl port-forward svc/fastapi-backend-service 8000:8000 &
 	make apply
 
 all:

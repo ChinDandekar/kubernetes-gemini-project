@@ -2,7 +2,7 @@ import requests
 import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import uvicorn
 import kubernetes.client
 from kubernetes import config
@@ -76,8 +76,7 @@ def get_peers_count():
     return statefulset.spec.replicas
 
 
-class ValueModel(BaseModel):
-    value: str
+
     
 @app.get("/")
 def index():
@@ -88,17 +87,16 @@ def index():
 def get_key(key: str):
     """Retrieve the value associated with the key."""
     value = kv_store.get(key)
-    if value is None:
-        raise HTTPException(status_code=404, detail="Key not found")
-    return {"key": key, "value": value}
+    return value
+
+class ValueModel(BaseModel):
+    context: str = Field(..., description="The chat context.")
+    messages: list[dict] = Field(..., description="A list of chat messages.")
 
 @app.post("/set/{key}")
 def set_key(key: str, body: ValueModel):
     """Set a key-value pair."""
-    global peer_count
-    global instance_id
-    value = body.value
-    kv_store[key] = value
+    kv_store[key] = body
     # Propagate the update to peers
     # for i in range(peer_count):
     #     if i == instance_id:  # Skip self
@@ -109,7 +107,7 @@ def set_key(key: str, body: ValueModel):
     #         print(f"Syncing {key} to {peer_url}: {response.status_code}")
     #     except requests.exceptions.RequestException as e:
     #         print(f"Failed to sync {key} to {peer_url}: {e}")
-    return {"key": key, "value": value}
+    return {"response": f"{key} successfully added"}
 
 @app.get("/check")
 def check():

@@ -76,7 +76,7 @@ function App() {
 
     try {
       const response = await axios.post(
-        BACKEND_URL + `/answer_query/`,
+        BACKEND_URL + `/answer_query`,
         { 
           chatid: currentConversationId,
           query: userMessage 

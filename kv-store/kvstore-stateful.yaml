@@ -6,7 +6,7 @@ metadata:
     app: kvstore
 spec:
   serviceName: kvstore-internal
-  replicas: 3  # Adjust for your initial quorum size
+  replicas: 1  # Adjust for your initial quorum size
   selector:
     matchLabels:
       app: kvstore
