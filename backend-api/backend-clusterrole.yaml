@@ -1,0 +1,13 @@
+# backend-api/backend-clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backend-kvstore-access
+rules:
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list"]
+    # Add this if your backend needs to discover the pods behind the service
+    # - apiGroups: [""]
+    #   resources: ["endpoints"]
+    #   verbs: ["get", "list"]

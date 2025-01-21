@@ -11,4 +11,4 @@ spec:
   ports:
     - name: client
       port: 9090  # Expose a port for client connections
-      targetPort: 9090
+      targetPort: 8080

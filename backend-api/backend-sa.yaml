@@ -1,0 +1,6 @@
+# backend-api/backend-sa.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend-sa
+  namespace: backend-api

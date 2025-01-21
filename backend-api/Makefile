@@ -30,6 +30,9 @@ apply:
 	kubectl apply -f deployment.yaml
 
 setup:
+	kubectl apply -f backend-sa.yaml
+	kubectl apply -f backend-clusterrolebinding.yaml
+	kubectl apply -f backend-clusterrole.yaml
 	kubectl apply -f service.yaml
 	kubectl port-forward svc/fastapi-backend-service 8000:8000 &
 	make apply
