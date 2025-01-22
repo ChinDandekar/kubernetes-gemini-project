@@ -4,6 +4,7 @@ import ChatWindow from './components/ChatWindow';
 import InputForm from './components/InputForm';
 import ConversationSidebar from './components/ConversationSidebar';
 import axios from 'axios';
+import { MathJaxContext } from "better-react-mathjax";
 
 function App() {
   const [conversations, setConversations] = useState([]);
@@ -125,22 +126,31 @@ function App() {
     setCurrentConversationId(newConversation.id);
   }, []);
 
+  const config = {
+    loader: { load: ["input/asciimath", "output/chtml", "ui/menu"] },
+    asciimath: {
+      delimiters: [["$", "$"], ["\\(", "\\)"]]
+    }
+  };
+
   return (
-    <div className="App">
-      <div className="layout">
-        <ConversationSidebar
-          conversations={conversations}
-          onSelectConversation={handleSelectConversation}
-          onNewConversation={handleNewConversation}
-          currentConversationId={currentConversationId}
-        />
-        <div className="chat-container">
-          <h1>ChinGemini</h1>
-          <ChatWindow messages={getCurrentConversation()?.messages || []} loading={loading} />
-          <InputForm onSendMessage={handleSendMessage} />
+    <MathJaxContext config={config}>
+      <div className="App">
+        <div className="layout">
+          <ConversationSidebar
+            conversations={conversations}
+            onSelectConversation={handleSelectConversation}
+            onNewConversation={handleNewConversation}
+            currentConversationId={currentConversationId}
+          />
+          <div className="chat-container">
+            <h1>ChinGemini</h1>
+            <ChatWindow messages={getCurrentConversation()?.messages || []} loading={loading} />
+            <InputForm onSendMessage={handleSendMessage} />
+          </div>
         </div>
       </div>
-    </div>
+    </MathJaxContext>
   );
 }
 
