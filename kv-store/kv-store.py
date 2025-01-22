@@ -52,7 +52,7 @@ app.add_middleware(
 )
 
 # Dummy in-memory store for demonstration
-kv_store = {}
+kv_store = {"context_dict": {}}
 
 def get_peer_url(index):
     # The DNS name for each peer will follow the format <pod-name>.<service-name>
@@ -83,24 +83,24 @@ def index():
     return {"ans": "It works!"}
 
 
-@app.get("/get/{key}")
+@app.get("/context/get/{key}")
 def get_key(key: str):
     """Retrieve the value associated with the key."""
-    value = kv_store.get(key, None)
+    value = kv_store["context_dict"].get(key, None)
     return value
 
-@app.get("/all_keys")
+@app.get("/context/all_keys")
 def get_all_keys():
-    return {"keys": list(kv_store.keys())}
+    return {"keys": list(kv_store["context_dict"].keys())}
 
 class ValueModel(BaseModel):
     context: str = Field(..., description="The chat context.")
     messages: list[dict] = Field(..., description="A list of chat messages.")
 
-@app.post("/set/{key}")
+@app.post("/context/set/{key}")
 def set_key(key: str, body: ValueModel):
     """Set a key-value pair."""
-    kv_store[key] = body
+    kv_store["context_dict"][key] = body
     # Propagate the update to peers
     # for i in range(peer_count):
     #     if i == instance_id:  # Skip self

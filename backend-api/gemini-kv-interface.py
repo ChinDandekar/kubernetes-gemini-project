@@ -20,7 +20,7 @@ isprod = os.environ["MODE"] == "prod"
 
 kvstore_service = os.environ.get("KVSTORE_SERVICE", "")
 base_url = f"http://{kvstore_service}:9090"
-local_kv_store = {}
+local_kv_store = {"context_dict": {}}
 # the 'schema' of this store will be:
 # {
     # chatid: 
@@ -53,7 +53,7 @@ def answer_query(request: QueryRequest):
     context = ""
     
     
-    value = get_from_kv(request.chatid)
+    value = get_from_context_kv(request.chatid)
     if value and "context" in value:
         context = value["context"]
         messages = value["messages"]
@@ -74,15 +74,15 @@ def answer_query(request: QueryRequest):
         "messages": messages
     }
     
-    set_in_kv(request.chatid, input_dict)
+    set_in_context_kv(request.chatid, input_dict)
             
         
     logger.info("Request processed successfully for chatid: %s", request.chatid) # Add info message at end
     return {"chatid": request.chatid, 'reply': response.text}
 
-def set_in_kv(key, input_dict):
+def set_in_context_kv(key, input_dict):
     if isprod:    
-        get_context_url = base_url + f"/set/{key}"
+        get_context_url = base_url + f"/context/set/{key}"
         try:
             kv_set_response = requests.post(get_context_url, json=input_dict)
             kv_set_response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
@@ -92,11 +92,11 @@ def set_in_kv(key, input_dict):
             logger.error(f"Error connecting to KVStore: {e}")
         
     else:
-        local_kv_store[key] = input_dict
+        local_kv_store["context_dict"][key] = input_dict
 
-def get_from_kv(key: int):
+def get_from_context_kv(key: int):
     if isprod:
-        get_context_url = base_url + f"/get/{key}"
+        get_context_url = base_url + f"/context/get/{key}"
         try:
             kv_get_response = requests.get(get_context_url)
             kv_get_response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
@@ -107,7 +107,7 @@ def get_from_kv(key: int):
             logger.error("Error connecting to KVStore: %s", e, exc_info=True) # Log exceptions with traceback
 
     else:
-        value = local_kv_store.get(key, None)
+        value = local_kv_store["context_dict"].get(key, None)
         logger.info("using local_kv_store")
         
     return value
@@ -118,14 +118,14 @@ def test_post():
 
 @app.get("/load_chat/{chatid}")
 def load_chat(chatid: int):
-    return get_from_kv(chatid)
+    return get_from_context_kv(chatid)
 
 @app.get("/load_all_chats")
 def load_all_chats():
     return_dict = {}
     
     if isprod:
-        get_keys_url = base_url + f"/all_keys"
+        get_keys_url = base_url + f"/context/all_keys"
         try:
             kv_get_response = requests.get(get_keys_url)
             kv_get_response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
@@ -136,11 +136,11 @@ def load_all_chats():
             logger.error("Error connecting to KVStore: %s", e, exc_info=True) # Log exceptions with traceback
             keys = []
     else:
-        keys = list(local_kv_store.keys())
+        keys = list(local_kv_store["context_dict"].keys())
         
     
     for key in keys:
-        return_dict[key] = get_from_kv(key)["messages"]
+        return_dict[key] = get_from_context_kv(key)["messages"]
     return [return_dict]
 
 if __name__ == "__main__":
