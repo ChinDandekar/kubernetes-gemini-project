@@ -24,12 +24,12 @@ push:
 	docker push localhost:5000/backend-image:latest
 
 delete:
-	pkill -f "kubectl port-forward svc/fastapi-backend-service 8000:8000"
 	kubectl delete -n backend-api deployment fastapi-backend
+	pkill -f "kubectl port-forward svc/fastapi-backend-service 8000:8000"
 
 apply:
 	kubectl apply -f deployment.yaml
-	sleep 1.5
+	sleep 2
 	kubectl port-forward svc/fastapi-backend-service 8000:8000 &
 
 setup:

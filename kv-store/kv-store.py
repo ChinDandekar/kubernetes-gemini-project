@@ -86,8 +86,12 @@ def index():
 @app.get("/get/{key}")
 def get_key(key: str):
     """Retrieve the value associated with the key."""
-    value = kv_store.get(key)
+    value = kv_store.get(key, None)
     return value
+
+@app.get("/all_keys")
+def get_all_keys():
+    return {"keys": list(kv_store.keys())}
 
 class ValueModel(BaseModel):
     context: str = Field(..., description="The chat context.")

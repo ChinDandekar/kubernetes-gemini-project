@@ -53,42 +53,36 @@ def answer_query(request: QueryRequest):
     context = ""
     
     
-    if isprod:
-        get_context_url = base_url + f"/get/{request.chatid}"
-        try:
-            kv_get_response = requests.get(get_context_url)
-            kv_get_response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
-            logger.info("KVStore get successful: %s", kv_get_response.json())
-            get_response_json = kv_get_response.json()
-            if get_response_json and "context" in get_response_json:
-                context = get_response_json["context"]
-                messages = get_response_json["messages"]
-            else:
-                context = ""
-                messages = []
-
-        except requests.exceptions.RequestException as e:
-            logger.error("Error connecting to KVStore: %s", e, exc_info=True) # Log exceptions with traceback
-            context = ""
-            messages = []
+    value = get_from_kv(request.chatid)
+    if value and "context" in value:
+        context = value["context"]
+        messages = value["messages"]
     else:
-        context = local_kv_store.get(request.chatid, {"context": ""})["context"]
-        logger.info("using local_kv_store")
+        context = ""
+        messages = []
     
     prompt = context + "**Query:** " + request.query + " \n**Answer:** "
     logger.info("this is prompt: " + prompt)
     response = model.generate_content(prompt)
     logger.info("this is response: " + response.text)
     
-    if isprod:
-        messages.append({"length": len(user_query), "sender": "user", "text": user_query})
-        messages.append({"length": len(response.text), "sender": "ai", "text": response.text})
-        input_dict = {
-            "context": prompt + response.text,
-            "messages": messages
-        }
+    
+    messages.append({"length": len(user_query), "sender": "user", "text": user_query})
+    messages.append({"length": len(response.text), "sender": "ai", "text": response.text})
+    input_dict = {
+        "context": prompt + response.text,
+        "messages": messages
+    }
+    
+    set_in_kv(request.chatid, input_dict)
+            
         
-        get_context_url = base_url + f"/set/{request.chatid}"
+    logger.info("Request processed successfully for chatid: %s", request.chatid) # Add info message at end
+    return {"chatid": request.chatid, 'reply': response.text}
+
+def set_in_kv(key, input_dict):
+    if isprod:    
+        get_context_url = base_url + f"/set/{key}"
         try:
             kv_set_response = requests.post(get_context_url, json=input_dict)
             kv_set_response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
@@ -98,15 +92,25 @@ def answer_query(request: QueryRequest):
             logger.error(f"Error connecting to KVStore: {e}")
         
     else:
-        if request.chatid not in local_kv_store:
-            local_kv_store[request.chatid] = {"context": "", "messages": []}
+        local_kv_store[key] = input_dict
+
+def get_from_kv(key: int):
+    if isprod:
+        get_context_url = base_url + f"/get/{key}"
+        try:
+            kv_get_response = requests.get(get_context_url)
+            kv_get_response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+            logger.info("KVStore get successful: %s", kv_get_response.json())
+            value = kv_get_response.json()
             
-        local_kv_store[request.chatid]["context"] = prompt + response.text
-        local_kv_store[request.chatid]["messages"].append({"length": len(user_query), "sender": "user", "text": user_query})
-        local_kv_store[request.chatid]["messages"].append({"length": len(response.text), "sender": "ai", "text": response.text})
+        except requests.exceptions.RequestException as e:
+            logger.error("Error connecting to KVStore: %s", e, exc_info=True) # Log exceptions with traceback
+
+    else:
+        value = local_kv_store.get(key, None)
+        logger.info("using local_kv_store")
         
-    logger.info("Request processed successfully for chatid: %s", request.chatid) # Add info message at end
-    return {"chatid": request.chatid, 'reply': response.text}
+    return value
 
 @app.post("/test_post")
 def test_post():
@@ -114,14 +118,29 @@ def test_post():
 
 @app.get("/load_chat/{chatid}")
 def load_chat(chatid: int):
-    return local_kv_store.get(chatid, "")
+    return get_from_kv(chatid)
 
 @app.get("/load_all_chats")
 def load_all_chats():
-    logger.info("MEOOOOOOW")
     return_dict = {}
-    for chatid in local_kv_store:
-        return_dict[chatid] = local_kv_store[chatid]["messages"]
+    
+    if isprod:
+        get_keys_url = base_url + f"/all_keys"
+        try:
+            kv_get_response = requests.get(get_keys_url)
+            kv_get_response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+            logger.info("KVStore get successful: %s", kv_get_response.json())
+            keys = kv_get_response.json()['keys']
+            
+        except requests.exceptions.RequestException as e:
+            logger.error("Error connecting to KVStore: %s", e, exc_info=True) # Log exceptions with traceback
+            keys = []
+    else:
+        keys = list(local_kv_store.keys())
+        
+    
+    for key in keys:
+        return_dict[key] = get_from_kv(key)["messages"]
     return [return_dict]
 
 if __name__ == "__main__":
