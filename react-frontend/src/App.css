@@ -30,7 +30,8 @@ body {
  /* Chat container */
 .chat-container {
   margin-left: 35vh; /* Leave space for the sidebar */
-  width: 300vh; /* Ensure chat container takes up remaining space */
+  width: 350vh; /* Ensure chat container takes up remaining space */
+  max-width: 80%;
   padding: 20px;
   background-color: #202123;
   display: flex;
@@ -47,6 +48,11 @@ h1 {
   color: #00aaff;
   margin-bottom: 15px;
   animation: fadeIn 1s ease-in-out;
+}
+
+/* Add this new style */
+.token-progress-container {
+  margin: 10px 0;
 }
 
 @keyframes fadeIn {

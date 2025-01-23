@@ -1,0 +1,15 @@
+{
+    "google": 
+    {
+        "gemini-1.5-flash": 
+        {
+            "rpd": 1500,
+            "context_window": 500000
+        },
+        "gemini-1.5-pro":
+        {
+            "rpd": 50,
+            "context_window": 1000000
+        }
+    }
+}

@@ -96,21 +96,12 @@ def get_all_keys():
 class ValueModel(BaseModel):
     context: str = Field(..., description="The chat context.")
     messages: list[dict] = Field(..., description="A list of chat messages.")
+    tokens_used: int = Field(..., description="The number of tokens in the conversation")
 
 @app.post("/context/set/{key}")
 def set_key(key: str, body: ValueModel):
     """Set a key-value pair."""
     kv_store["context_dict"][key] = body
-    # Propagate the update to peers
-    # for i in range(peer_count):
-    #     if i == instance_id:  # Skip self
-    #         continue
-    #     peer_url = get_peer_url(i)
-    #     try:
-    #         response = requests.post(f'{peer_url}/set/{key}', json={"value": value})
-    #         print(f"Syncing {key} to {peer_url}: {response.status_code}")
-    #     except requests.exceptions.RequestException as e:
-    #         print(f"Failed to sync {key} to {peer_url}: {e}")
     return {"response": f"{key} successfully added"}
 
 @app.get("/check")

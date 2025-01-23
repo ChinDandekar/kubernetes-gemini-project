@@ -1,0 +1,36 @@
+.token-progress-container {
+    width: 100%;
+    height: 5px;
+    background-color: #e0e0e0;
+    margin-bottom: 10px;
+    border-radius: 2.5px;
+    overflow: hidden;
+  }
+  
+  .token-progress-bar {
+    height: 100%;
+    background-color: #00aaff;
+    transition: width 0.3s ease-in-out;
+  }
+
+  .token-progress-tooltip {
+    position: absolute;
+    top: auto;
+    left: 60%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    pointer-events: none;
+    z-index: 1000;
+  }
+  
+  .token-progress-container:hover .token-progress-tooltip {
+    opacity: 1;
+  }
+  

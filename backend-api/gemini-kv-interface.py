@@ -6,14 +6,16 @@ import requests
 import logging
 from pydantic import BaseModel
 import os
+import json
 
 load_dotenv()
 app = FastAPI()
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 model = genai.GenerativeModel("gemini-1.5-flash")
+llm_info = json.load(open(("llms.json")))
+context_window = llm_info["google"]["gemini-1.5-flash"]["context_window"]
 
 logger = logging.getLogger(__name__) # Get a logger instance
-logger.setLevel(logging.INFO) # Set the logger level to INFO
 logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 isprod = os.environ["MODE"] == "prod"
@@ -41,6 +43,11 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+@app.get("/get_context_window/{model_family}/{llm_name}")
+def get_context_window(model_family: str, llm_name: str):
+    context_window = llm_info[model_family][llm_name]['context_window']
+    logger.info(f"context_window: {context_window}")
+    return {"context_window": context_window}
 
 # Define request body schema
 class QueryRequest(BaseModel):
@@ -62,23 +69,24 @@ def answer_query(request: QueryRequest):
         messages = []
     
     prompt = context + "**Query:** " + request.query + " \n**Answer:** "
-    logger.info("this is prompt: " + prompt)
     response = model.generate_content(prompt)
-    logger.info("this is response: " + response.text)
+    tokens_used = response.usage_metadata.total_token_count
     
     
     messages.append({"length": len(user_query), "sender": "user", "text": user_query})
     messages.append({"length": len(response.text), "sender": "ai", "text": response.text})
     input_dict = {
         "context": prompt + response.text,
-        "messages": messages
+        "messages": messages,
+        "tokens_used": tokens_used
     }
+    
+    logger.info(f"{tokens_used} tokens used for {context_window}")
     
     set_in_context_kv(request.chatid, input_dict)
             
         
-    logger.info("Request processed successfully for chatid: %s", request.chatid) # Add info message at end
-    return {"chatid": request.chatid, 'reply': response.text}
+    return {"chatid": request.chatid, 'reply': response.text, "tokens_used": tokens_used}
 
 def set_in_context_kv(key, input_dict):
     if isprod:    
@@ -86,7 +94,6 @@ def set_in_context_kv(key, input_dict):
         try:
             kv_set_response = requests.post(get_context_url, json=input_dict)
             kv_set_response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
-            logger.info(f"KVStore post successful: {kv_set_response.json()}")
             response_json = kv_set_response.json()
         except requests.exceptions.RequestException as e:
             logger.error(f"Error connecting to KVStore: {e}")
@@ -100,7 +107,6 @@ def get_from_context_kv(key: int):
         try:
             kv_get_response = requests.get(get_context_url)
             kv_get_response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
-            logger.info("KVStore get successful: %s", kv_get_response.json())
             value = kv_get_response.json()
             
         except requests.exceptions.RequestException as e:
@@ -129,7 +135,6 @@ def load_all_chats():
         try:
             kv_get_response = requests.get(get_keys_url)
             kv_get_response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
-            logger.info("KVStore get successful: %s", kv_get_response.json())
             keys = kv_get_response.json()['keys']
             
         except requests.exceptions.RequestException as e:
@@ -140,7 +145,8 @@ def load_all_chats():
         
     
     for key in keys:
-        return_dict[key] = get_from_context_kv(key)["messages"]
+        value = get_from_context_kv(key)
+        return_dict[key] = {"messages": value["messages"], "tokens_used": value["tokens_used"]}
     return [return_dict]
 
 if __name__ == "__main__":
