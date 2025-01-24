@@ -1,7 +1,7 @@
 import React from "react"
 import ReactMarkdown from "react-markdown"
 import { CodeBlock } from "./CodeBlock"
-import { MathJax, MathJaxContext } from "better-react-mathjax";
+import { MathJax } from "better-react-mathjax";
 
 
 export function MarkdownRenderer({ children }) {

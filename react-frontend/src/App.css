@@ -23,16 +23,16 @@ body {
   display: flex;
   height: 100%;
   width: 100%;
-  max-width: 1200px;
   position: relative;
 }
 
  /* Chat container */
 .chat-container {
-  margin-left: 35vh; /* Leave space for the sidebar */
-  width: 350vh; /* Ensure chat container takes up remaining space */
-  max-width: 80%;
-  padding: 20px;
+  margin-left: 24vw; /* Leave space for the sidebar */
+  margin-right: 4vw;
+  width: 75vw; /* Ensure chat container takes up remaining space */
+  max-width: 75vw;
+  padding: 1%;
   background-color: #202123;
   display: flex;
   flex-direction: column;
@@ -40,6 +40,19 @@ body {
   gap: 20px;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.chat-container.collapsed {
+  margin-left: 4vw;
+  width: 90vw;
+  max-width: 90vw;
+  margin-right: 0vw;
+}
+
+
+.layout.sidebar-collapsed .chat-container {
+  margin-left: 60px;
+  width: calc(100% - 60px);
 }
 
 h1 {

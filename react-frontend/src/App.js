@@ -13,6 +13,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [contextWindow, setContextWindow] = useState(0);
   const [tokensUsed, setTokensUsed] = useState(0);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   const BACKEND_URL = useMemo(() => {
     return process.env.REACT_APP_BACKEND_URL
@@ -156,14 +157,15 @@ function App() {
   return (
     <MathJaxContext config={config}>
       <div className="App">
-        <div className="layout">
+      <div className={`layout`}>
           <ConversationSidebar
             conversations={conversations}
             onSelectConversation={handleSelectConversation}
             onNewConversation={handleNewConversation}
             currentConversationId={currentConversationId}
+            onCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           />
-          <div className="chat-container">
+          <div className={`chat-container ${isSidebarCollapsed ? "collapsed": ""}`}>
             <h1>ChinGemini</h1>
             <ChatWindow messages={getCurrentConversation()?.messages || []} loading={loading} />
             <TokenProgressBar tokensUsed={tokensUsed} contextWindow={contextWindow} />
