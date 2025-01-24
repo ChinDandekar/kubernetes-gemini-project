@@ -49,6 +49,10 @@ def get_context_window(model_family: str, llm_name: str):
     logger.info(f"context_window: {context_window}")
     return {"context_window": context_window}
 
+
+@app.get("/get_all_models")
+def get_all_models():
+    return llm_info
 # Define request body schema
 class QueryRequest(BaseModel):
     chatid: int

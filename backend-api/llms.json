@@ -4,12 +4,14 @@
         "gemini-1.5-flash": 
         {
             "rpd": 1500,
-            "context_window": 500000
+            "context_window": 500000,
+            "description": "General purpose fast Google model"
         },
         "gemini-1.5-pro":
         {
             "rpd": 50,
-            "context_window": 1000000
+            "context_window": 1000000,
+            "description": "High-powered model with 50 rpd limit"
         }
     }
 }

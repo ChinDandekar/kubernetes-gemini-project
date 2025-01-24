@@ -11,9 +11,46 @@ function App() {
   const [conversations, setConversations] = useState([]);
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [contextWindow, setContextWindow] = useState(0);
+  const [models, setModels] = useState(
+    {
+      "google":
+      {
+        "gemini-1.5-flash": 
+        {
+            "rpd": 1500,
+            "context_window": 500000
+        }
+      }
+    }
+  )
+  const [currentModel, setCurrentModel] = useState(
+          {
+            "make": "google", 
+            "model": "gemini-1.5-flash", 
+            "rpd": 1500,
+            "context_window": 500000,
+            "description": "General purpose fast Google model"
+          }
+    )
   const [tokensUsed, setTokensUsed] = useState(0);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  
+  const setInitialModel = (data) => {
+    console.log("data:")
+    console.log(data)
+    const firstProvider = Object.keys(data)[0]; //Gets "google"
+    const firstModel = Object.keys(data[firstProvider])[0]; //Gets "gemini-1.5-flash"
+    const modelData = data[firstProvider][firstModel];
+
+    setCurrentModel({
+      make: firstProvider,
+      model: firstModel,
+      rpd: modelData.rpd,
+      context_window: modelData.context_window,
+      description: modelData.description,
+    });
+  };
+
 
   const BACKEND_URL = useMemo(() => {
     return process.env.REACT_APP_BACKEND_URL
@@ -54,9 +91,7 @@ function App() {
           setTokensUsed(transformedConversations[0].tokensUsed)
         }
 
-        // Fetch context window size
-        const contextWindowResponse = await axios.get(BACKEND_URL + "/get_context_window/google/gemini-1.5-flash")
-        setContextWindow(contextWindowResponse.data.context_window)
+
 
       } catch (error) {
         console.error('Error fetching chats:', error);
@@ -67,6 +102,30 @@ function App() {
     };
 
     fetchChats();
+  }, [BACKEND_URL]); // Empty dependency array ensures this runs only once on mount
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const response = await fetch(BACKEND_URL + '/get_all_models');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setModels(data); // Directly sets the data if it's a single chat object. If it's an array of chat objects, use a mapping function to process the array appropriately.
+        console.log("models:")
+        console.log(data)
+        // Fetch context window size
+
+        setInitialModel(data)
+        
+      } catch (error) {
+        console.error('Error fetching models:', error);
+        // Handle error appropriately, e.g., display an error message to the user.
+      }
+    };
+
+    fetchModels();
   }, [BACKEND_URL]); // Empty dependency array ensures this runs only once on mount
 
 
@@ -168,7 +227,7 @@ function App() {
           <div className={`chat-container ${isSidebarCollapsed ? "collapsed": ""}`}>
             <h1>ChinGemini</h1>
             <ChatWindow messages={getCurrentConversation()?.messages || []} loading={loading} />
-            <TokenProgressBar tokensUsed={tokensUsed} contextWindow={contextWindow} />
+            <TokenProgressBar tokensUsed={tokensUsed} contextWindow={currentModel.context_window} />
             <InputForm onSendMessage={handleSendMessage} />
           </div>
         </div>
