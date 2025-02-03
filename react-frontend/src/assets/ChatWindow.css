@@ -10,7 +10,6 @@
   gap: 10px;
   margin-bottom: 15px;
   border-radius: 10px;
-  background: #2a2d37; /* Darker background for the chat container */
   transition: background-color 0.3s ease-in-out;
 }
 

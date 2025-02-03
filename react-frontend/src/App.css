@@ -7,7 +7,7 @@
 }
 
 body {
-  background: #343541; /* Dark background */
+  background-color: #202123;
   color: #e5e5e5; /* Light text */
   font-size: 16px;
   height: 100vh;
@@ -33,7 +33,6 @@ body {
   width: 75vw; /* Ensure chat container takes up remaining space */
   max-width: 75vw;
   padding: 1%;
-  background-color: #202123;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
